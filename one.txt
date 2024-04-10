@@ -1,0 +1,152 @@
+// const express = require('express')
+// const { MongoClient } = require('mongodb');
+
+import express from 'express'
+import{MongoClient} from 'mongodb'
+import * as dotenv from 'dotenv'
+dotenv.config()
+
+const app = express()
+const port = process.env.port
+app.use(express.json())
+
+
+//   const movies   =   [
+//                           {id:1,
+//                            name:"Dada",
+//                            rating:8.5,
+//                            summary:"Dada is an emotional drama about a young man dealing with becoming a parent, out of the blue, with a lot of maturity",
+//                            poster:"https://th.bing.com/th?id=OIP.7l1bfGe-kAEZE_VaTGVEeAHaLH&w=204&h=306&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2",
+//                            trailer:"https://www.youtube.com/embed/23mMdgo0prk",
+//                            language:"tamil"},
+
+//                            {id:2,
+//                             name:"remo",
+//                            rating:8.7,
+//                            summary:"Dada is an emotional drama about a young man dealing with becoming a parent, out of the blue, with a lot of maturity",
+//                            poster:"https://th.bing.com/th?id=OIP.7l1bfGe-kAEZE_VaTGVEeAHaLH&w=204&h=306&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2",
+//                            trailer:"https://www.youtube.com/embed/GEB4qrrWIgs" ,
+//                            language:"english"
+//                           },
+                          
+
+//                            {id:3,
+//                             name:"super deluxe",
+//                            rating:7.5,
+//                            summary:"Dada is an emotional drama about a young man dealing with becoming a parent, out of the blue, with a lot of maturity",
+//                            poster:"https://th.bing.com/th?id=OIP.7l1bfGe-kAEZE_VaTGVEeAHaLH&w=204&h=306&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2",
+//                            trailer: "https://www.youtube.com/embed/3-Xq_Zz3nPA",
+//                            language:"english"
+//                           },
+                           
+//                            {id:4,
+//                             name:"good night",
+//                            rating:7.9,
+//                            summary:"Dada is an emotional drama about a young man dealing with becoming a parent, out of the blue, with a lot of maturity",
+//                            poster:"https://th.bing.com/th?id=OIP.7l1bfGe-kAEZE_VaTGVEeAHaLH&w=204&h=306&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2",
+//                            trailer:"https://www.youtube.com/embed/eLPePlnFoho" ,
+//                            language:"english"
+//                           },
+                           
+
+//                            {id:5,
+//                             name:"fight club",
+//                            rating:7.5,
+//                            summary:"Dada is an emotional drama about a young man dealing with becoming a parent, out of the blue, with a lot of maturity",
+//                            poster:"https://th.bing.com/th?id=OIP.7l1bfGe-kAEZE_VaTGVEeAHaLH&w=204&h=306&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2",
+//                            trailer:"https://www.youtube.com/embed/oQVhwMYRgFY",
+//                            language:"english" },
+                           
+//                            {id:6,
+//                             name:"mankatha",
+//                            rating:9,
+//                            summary:"Dada is an emotional drama about a young man dealing with becoming a parent, out of the blue, with a lot of maturity",
+//                            poster:"https://th.bing.com/th?id=OIP.7l1bfGe-kAEZE_VaTGVEeAHaLH&w=204&h=306&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2",
+//                            trailer:"https://www.youtube.com/embed/vHESM8iR1JE" ,
+//                            language:"tamil"
+//                             }
+                          
+//                           ]
+
+  
+const url =process.env. MONGO_URL;
+  
+async function createConnection(){
+    const client = new MongoClient(url);
+    await client.connect();
+    console.log("mongo is connected")
+    return client
+}
+
+export const client = await createConnection()
+
+app.get("/",(req,res)=>{
+    res.send("hello world")
+})
+
+
+// app.get("/movie",(req,res)=>{
+//     res.send(movies)
+// })
+
+
+app.get("/movie/:id",async(req,res)=>{
+    const{id}=req.params
+    const movie=await client.db("a8movie").collection("movies").findOne({id:id})
+    // const movie=movies.filter((mv)=>mv.id==id)[0]
+    res.send(movie)
+})
+
+
+// app.get("/movie",(req,res)=>{
+//     const{language}=req.query
+//     const movie=movies.filter((mv)=>mv.language==language)
+//     res.send(movie)
+// })
+
+app.get("/movie",async(req,res)=>{
+    const{language,rating}=req.query
+    console.log(req.query)
+   
+    // let filterMovies=movies
+    // if(language){
+    //     filterMovies=filterMovies.filter((mv)=>mv.language==language)
+    // }
+    // if(rating){
+    //     filterMovies=filterMovies.filter((mv)=>mv.rating==rating)
+    // }
+    // res.send(filterMovies)
+    const movie=await client.db("a8movie").collection("movies").find(req.query).toArray()
+    if(req.query.rating){
+        req.query.rating=+req.query.rating
+    }
+    res.send(movie)
+})
+
+app.delete("/movie/:id",async(req,res)=>{
+    const{id}=req.params
+    const movie=await client.db("a8movie").collection("movies").deleteOne({id:id})
+    // const movie=movies.filter((mv)=>mv.id==id)[0]
+    res.send(movie)
+})
+
+app.post("/movie",async(req,res)=>{
+    const newMovie = req.body
+    const movie=await client.db("a8movie").collection("movies").insertMany(newMovie)
+    res.send(movie)
+})
+
+app.put("/movie/:id",async(req,res)=>{
+    const{id}=req.params
+    const updateMovie = req.body
+    console.log(updateMovie)
+    const result=await client.db("a8movie").collection("movies").updateOne({id:id},{$set:updateMovie})
+    res.send(result)
+
+})
+
+
+
+
+
+app.listen(port,console.log("server started on the port:",port))
